@@ -75,14 +75,15 @@ namespace StringSocketTester
                         sendSocket.BeginSend(c.ToString(), (e, o) => { }, null);
                     }
 
+
                     // Make sure the lines were received properly.
-                    //Assert.AreEqual(true, mre1.WaitOne(timeout), "Timed out waiting 1");
+                    Assert.AreEqual(true, mre1.WaitOne(timeout), "Timed out waiting 1");
                     Assert.AreEqual("Hello world", s1);
                     Assert.AreEqual(1, p1);
 
-                    Assert.AreEqual(true, mre2.WaitOne(timeout), "Timed out waiting 2");
-                    Assert.AreEqual("This is a test", s2);
-                    Assert.AreEqual(2, p2);
+                   Assert.AreEqual(true, mre2.WaitOne(timeout), "Timed out waiting 2");
+                   Assert.AreEqual("This is a test", s2);
+                   Assert.AreEqual(2, p2);
                 }
                 finally
                 {
@@ -110,6 +111,56 @@ namespace StringSocketTester
             }
         }
 
+        [TestMethod]
+        public void SendTest()
+        {
+            TcpListener server = null;
+            TcpClient client = null;
+            int port = 4002;
+            byte[] incomingBytes = new byte[1024];
+            char[] incomingChars = new char[1024];
+            UTF8Encoding encoding = new UTF8Encoding();
+            try
+            {
+                server = new TcpListener(IPAddress.Any, port);
+                server.Start();
+                client = new TcpClient("localhost", port);
 
+                // Obtain the sockets from the two ends of the connection. We are using the blocking AcceptSocket()
+                // method here, which is OK for a test case.
+                Socket serverSocket = server.AcceptSocket();
+                Socket clientSocket = client.Client;
+
+                // Wrap the two ends of the connection into StringSockets
+                StringSocket sendSocket = new StringSocket(serverSocket, encoding);
+                // String to send and recieve
+                string testString = "Hello world\nThis is a test\n";
+
+                // Tell the client socket to begin listening for a message to recieve
+                clientSocket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
+                SocketFlags.None, (result) =>
+                {
+                    int bytesRead = clientSocket.EndReceive(result);
+                    // Convert the bytes into characters and appending to incoming
+                    encoding.GetDecoder().GetChars(incomingBytes, 0, bytesRead, incomingChars, 0, false);
+
+                    // Turn the char[] into a string
+                    StringBuilder incomingString = new StringBuilder();
+                    incomingString.Append(incomingChars);
+
+                    // assert that the string recieved is the same as the one sent
+                    Assert.IsTrue(testString == incomingString.ToString(), incomingString.ToString());
+
+                }, null);
+
+                // send the test message
+                sendSocket.BeginSend(testString, (e, o) => { }, null);
+            }
+            finally
+            {
+                server.Stop();
+                client.Close();
+            }
+        }
     }
 }

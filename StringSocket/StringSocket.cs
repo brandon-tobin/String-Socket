@@ -87,14 +87,11 @@ namespace CustomNetworking
         private byte[] incomingBytes = new byte[BUFFER_SIZE];
         private char[] incomingChars = new char[BUFFER_SIZE];
 
-        // Records whether an asynchronous send attempt is ongoing
-        private bool sendIsOngoing = false;
-
         // For synchronizing sends
-        private readonly object sendSync = new object();
+        private static readonly object sendSync = new object();
 
         // For synchronizing receives 
-        private readonly object receiveSync = new object();
+        private static readonly object receiveSync = new object();
 
 
         // Bytes that we are actively trying to send, along with the
@@ -102,11 +99,9 @@ namespace CustomNetworking
         private byte[] pendingBytes = new byte[0];
         private int pendingIndex = 0;
 
-        private Queue<ReceiveObject> awaitingReceive = new Queue<ReceiveObject>();
+        private static Queue<ReceiveObject> awaitingReceive = new Queue<ReceiveObject>();
 
-        private Queue<SendObject> awaitingSend = new Queue<SendObject>();
-
-        bool killThread = false;
+        private static Queue<SendObject> awaitingSend = new Queue<SendObject>();
 
         /// <summary>
         /// Creates a StringSocket from a regular Socket, which should already be connected.  
@@ -151,11 +146,12 @@ namespace CustomNetworking
         public void BeginSend(String s, SendCallback callback, object payload)
         {
             SendObject send = new SendObject(callback, payload);
+            awaitingSend.Enqueue(send);
 
             // Lock?
             lock (sendSync)
             {
-                awaitingSend.Enqueue(send);
+            
                 // Lock?
 
                 pendingBytes = encoding.GetBytes(s);
@@ -313,20 +309,17 @@ namespace CustomNetworking
         {
             ReceiveObject receive = new ReceiveObject(null, callback, payload);
 
-            // Lock?
-            lock (receiveSync)
+             lock (receiveSync)
             {
                 awaitingReceive.Enqueue(receive);
-                // Lock? 
 
-                try
+                 try
                 {
                     socket.BeginReceive(incomingBytes, 0, incomingBytes.Length, SocketFlags.None, MessageReceived, null);
                 }
                 catch (Exception e)
                 {
                     ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(null, e, payload)));
-                    //return;
                 }
             }
         }
@@ -339,7 +332,6 @@ namespace CustomNetworking
         {
             lock (receiveSync)
             {
-
                 try
                 {
                     // Figure out how many bytes have come in
@@ -361,7 +353,7 @@ namespace CustomNetworking
                         incoming.Append(incomingChars, 0, charsRead);
 
                         // Echo any complete lines, after capitalizing them
-                        for (int i = 0; i < incoming.Length; i++ )
+                        for (int i = 0; i < incoming.Length; i++)
                         {
                             if (incoming[i] == '\n')
                             {
@@ -371,6 +363,7 @@ namespace CustomNetworking
                                 ReceiveObject received = awaitingReceive.Dequeue();
                                 ReceiveCallback callback = received.call;
                                 object payload = received.pay;
+
 
                                 ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(lines, null, payload)));
                                 //callback(lines, null, payload);
@@ -394,13 +387,11 @@ namespace CustomNetworking
                             object payload = receive.pay;
 
                             ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(null, e, payload)));
-                          //  return;
                         }
                     }
                 }
                 catch (NullReferenceException e)
                 {
-
                 }
             }
         }

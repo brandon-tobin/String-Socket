@@ -205,7 +205,7 @@ namespace StringSocketTester
                 };
 
                 // Creates 500 test strings.
-                const int testStringsCount = 10;
+                const int testStringsCount = 3;
                 string[] testStrings = new string[testStringsCount];
                 for (int i = 1; i < testStringsCount + 1; ++i)
                 {
@@ -595,7 +595,7 @@ namespace StringSocketTester
                 }
 
                 // Creates 5000 test strings.
-                const int testStringsCount = 5000;
+                const int testStringsCount = 2;
                 string[] testStrings = new string[testStringsCount];
                 for (int i = 1; i < testStringsCount + 1; ++i)
                 {

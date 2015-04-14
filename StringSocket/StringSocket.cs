@@ -103,7 +103,6 @@ namespace CustomNetworking
 
         private static Queue<SendObject> awaitingSend = new Queue<SendObject>();
 
-        private bool isSending = false;
         private bool isReceiving = false;
 
 
@@ -150,33 +149,25 @@ namespace CustomNetworking
         public void BeginSend(String s, SendCallback callback, object payload)
         {
             SendObject send = new SendObject(callback, payload);
-  
+
             lock (sendSync)
             {
                 awaitingSend.Enqueue(send);
+            }
 
                 pendingBytes = encoding.GetBytes(s);
                 pendingIndex = 0;
                 try
                 {
-                    if (isSending == false)
-                    {
-                        isSending = true;
                         socket.BeginSend(pendingBytes, pendingIndex, pendingBytes.Length - pendingIndex, SocketFlags.None, MessageSent, null);
-                    }
-                    else
-                    {
-                        return;
-                    }
                 }
                 catch (Exception e)
                 {
                     awaitingSend.Dequeue();
                     ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(e, payload)));
-                    isSending = false;
                     return;
                 }
-            }
+            //}
         }
 
         /// <summary>
@@ -187,8 +178,8 @@ namespace CustomNetworking
             try
             {
                 // Get exclusive access to send mechanism
-                lock (sendSync)
-                {
+               // lock (sendSync)
+              //  {
                     int bytesSent = socket.EndSend(result);
 
                     if (bytesSent == pendingBytes.Length)
@@ -196,9 +187,9 @@ namespace CustomNetworking
                         SendObject send = awaitingSend.Dequeue();
                         SendCallback callback = send.call;
                         object payload = send.pay;
-                        isSending = false;
 
                         ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(null, payload)));
+                        return;
                     }
 
                     // The socket has been closed
@@ -215,7 +206,7 @@ namespace CustomNetworking
                         pendingIndex += bytesSent;
                         SendBytes();
                     }
-                }
+               // }
             }
             catch (Exception e)
             {
@@ -224,7 +215,6 @@ namespace CustomNetworking
                 object payload = send.pay;
 
                 ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(e, payload)));
-                isSending = false;
                 return;
             }
         }
@@ -235,8 +225,8 @@ namespace CustomNetworking
         /// </summary>
         private void SendBytes()
         {
-            lock (sendSync)
-            {
+           // lock (sendSync)
+           // {
                 while (awaitingSend.Count > 0)
                 {
                     try
@@ -253,7 +243,7 @@ namespace CustomNetworking
                          return;
                     }
                 }
-            }
+            //}
         }
 
 
@@ -292,10 +282,10 @@ namespace CustomNetworking
         {
             ReceiveObject receive = new ReceiveObject(null, callback, payload);
 
-             lock (receiveSync)
+            lock (receiveSync)
             {
                 awaitingReceive.Enqueue(receive);
-
+            }
                  try
                 {
                     if (isReceiving == false)
@@ -312,7 +302,7 @@ namespace CustomNetworking
                 {
                     ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(null, e, payload)));
                 }
-            }
+            //}
         }
 
 
@@ -321,8 +311,8 @@ namespace CustomNetworking
         /// </summary>
         private void MessageReceived(IAsyncResult result)
         {
-            lock (receiveSync)
-            {
+            //lock (receiveSync)
+          //  {
                 try
                 {
                     // Figure out how many bytes have come in
@@ -385,7 +375,7 @@ namespace CustomNetworking
                 catch (NullReferenceException e)
                 {
                 }
-            }
+           // }
         }
 
 

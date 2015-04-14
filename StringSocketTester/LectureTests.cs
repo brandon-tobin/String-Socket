@@ -4,6 +4,7 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Net;
 using System.Text;
+using System.Collections.Generic;
 
 namespace CustomNetworking
 {
@@ -61,6 +62,25 @@ namespace CustomNetworking
                 Assert.Fail("Timed out");
             }
         }
+
+       /* internal void WaitAreEqualSortedStringSets(int p)
+        {
+            throw new NotImplementedException();
+        }*/
+
+        public void WaitAreEqualSortedStringSets(int timeout = -1)
+        {
+            if (this.mre.WaitOne(timeout))
+            {
+                CollectionAssert.AreEqual(((SortedSet<string>)this.Expected), ((SortedSet<string>)this.Actual));
+            }
+            else
+            {
+                Assert.Fail("Timed out.");
+            }
+        }
+
+
     }
 
 

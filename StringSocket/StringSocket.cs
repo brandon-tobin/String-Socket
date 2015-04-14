@@ -103,7 +103,9 @@ namespace CustomNetworking
 
         private static Queue<SendObject> awaitingSend = new Queue<SendObject>();
 
+        private bool isSending = false;
         private bool isReceiving = false;
+
 
         /// <summary>
         /// Creates a StringSocket from a regular Socket, which should already be connected.  
@@ -159,8 +161,8 @@ namespace CustomNetworking
                 pendingBytes = encoding.GetBytes(s);
                 pendingIndex = 0;
                 try
-                {
-                    socket.BeginSend(pendingBytes, pendingIndex, pendingBytes.Length - pendingIndex, SocketFlags.None, MessageSent, null);
+                {   
+                        socket.BeginSend(pendingBytes, pendingIndex, pendingBytes.Length - pendingIndex, SocketFlags.None, MessageSent, null);
                 }
                 catch (Exception e)
                 {
@@ -230,8 +232,6 @@ namespace CustomNetworking
         {
             lock (sendSync)
             {
-
-
                 while (awaitingSend.Count > 0)
                 {
                     try

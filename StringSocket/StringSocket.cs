@@ -103,6 +103,8 @@ namespace CustomNetworking
 
         private static Queue<SendObject> awaitingSend = new Queue<SendObject>();
 
+        private bool isReceiving = false;
+
         /// <summary>
         /// Creates a StringSocket from a regular Socket, which should already be connected.  
         /// The read and write methods of the regular Socket must not be called after the
@@ -317,7 +319,15 @@ namespace CustomNetworking
 
                  try
                 {
-                    socket.BeginReceive(incomingBytes, 0, incomingBytes.Length, SocketFlags.None, MessageReceived, null);
+                    if (isReceiving == false)
+                    {
+                        isReceiving = true;
+                        socket.BeginReceive(incomingBytes, 0, incomingBytes.Length, SocketFlags.None, MessageReceived, null);
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
                 catch (Exception e)
                 {
@@ -368,8 +378,6 @@ namespace CustomNetworking
 
 
                                 ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(lines, null, payload)));
-                                //callback(lines, null, payload);
-                                return;
                             }
                         }
 
@@ -380,6 +388,10 @@ namespace CustomNetworking
                             {
                                 socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
                                     SocketFlags.None, MessageReceived, null);
+                            }
+                            else
+                            {
+                                isReceiving = false;
                             }
                         }
                         catch (Exception e)

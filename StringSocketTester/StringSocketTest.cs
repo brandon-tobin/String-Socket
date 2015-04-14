@@ -205,7 +205,7 @@ namespace StringSocketTester
                 };
 
                 // Creates 500 test strings.
-                const int testStringsCount = 3;
+                const int testStringsCount = 10;
                 string[] testStrings = new string[testStringsCount];
                 for (int i = 1; i < testStringsCount + 1; ++i)
                 {
@@ -268,8 +268,8 @@ namespace StringSocketTester
                     });
 
                 // Asserts that the Expected and Actual sets in both Asserters are equal, and that the entire operation completed in under 5 seconds.
-                sendAsserter.WaitAreEqualSortedStringSets(500000);
-                receiveAsserter.WaitAreEqualSortedStringSets(0000);
+                sendAsserter.WaitAreEqualSortedStringSets(5000);
+                receiveAsserter.WaitAreEqualSortedStringSets(5000);
             }
             finally
             {

@@ -150,24 +150,31 @@ namespace CustomNetworking
         public void BeginSend(String s, SendCallback callback, object payload)
         {
             SendObject send = new SendObject(callback, payload);
-           
-
-            // Lock?
+  
             lock (sendSync)
             {
                 awaitingSend.Enqueue(send);
-                // Lock?
 
                 pendingBytes = encoding.GetBytes(s);
                 pendingIndex = 0;
                 try
-                {   
+                {
+                    if (isSending == false)
+                    {
+                        isSending = true;
                         socket.BeginSend(pendingBytes, pendingIndex, pendingBytes.Length - pendingIndex, SocketFlags.None, MessageSent, null);
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
                 catch (Exception e)
                 {
                     awaitingSend.Dequeue();
                     ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(e, payload)));
+                    isSending = false;
+                    return;
                 }
             }
         }
@@ -177,13 +184,8 @@ namespace CustomNetworking
         /// </summary>
         private void MessageSent(IAsyncResult result)
         {
-            // Find out how many bytes were actually sent
-
             try
             {
-                
-
-
                 // Get exclusive access to send mechanism
                 lock (sendSync)
                 {
@@ -194,6 +196,7 @@ namespace CustomNetworking
                         SendObject send = awaitingSend.Dequeue();
                         SendCallback callback = send.call;
                         object payload = send.pay;
+                        isSending = false;
 
                         ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(null, payload)));
                     }
@@ -203,6 +206,7 @@ namespace CustomNetworking
                     {
                         socket.Close();
                         Console.WriteLine("Socket closed");
+                        return;
                     }
 
                     // Update the pendingIndex and keep trying
@@ -220,7 +224,8 @@ namespace CustomNetworking
                 object payload = send.pay;
 
                 ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(e, payload)));
-                //return;
+                isSending = false;
+                return;
             }
         }
 
@@ -245,36 +250,10 @@ namespace CustomNetworking
                         object payload = send.pay;
 
                         ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(e, payload)));
-                        // return;
+                         return;
                     }
                 }
             }
-
-
-            // If we're in the middle of the process of sending out a block of bytes,
-            // keep doing that.
-            /*  if (pendingIndex < pendingBytes.Length)
-              {
-                  socket.BeginSend(pendingBytes, pendingIndex, pendingBytes.Length - pendingIndex,
-                                   SocketFlags.None, MessageSent, null);
-              }
-            
-              // If we're not currently dealing with a block of bytes, make a new block of bytes
-              // out of outgoing and start sending that.
-              else if (outgoing.Length > 0)
-              {
-                  pendingBytes = encoding.GetBytes(outgoing.ToString());
-                  pendingIndex = 0;
-                  outgoing.Clear();
-                  socket.BeginSend(pendingBytes, 0, pendingBytes.Length,
-                                   SocketFlags.None, MessageSent, null);
-              }
-
-              // If there's nothing to send, shut down for the time being.
-              else
-              {
-                  sendIsOngoing = false;
-              }*/
         }
 
 
@@ -375,7 +354,6 @@ namespace CustomNetworking
                                 ReceiveObject received = awaitingReceive.Dequeue();
                                 ReceiveCallback callback = received.call;
                                 object payload = received.pay;
-
 
                                 ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(x => callback(lines, null, payload)));
                             }

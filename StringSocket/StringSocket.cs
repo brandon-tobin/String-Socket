@@ -146,12 +146,12 @@ namespace CustomNetworking
         public void BeginSend(String s, SendCallback callback, object payload)
         {
             SendObject send = new SendObject(callback, payload);
-            awaitingSend.Enqueue(send);
+           
 
             // Lock?
             lock (sendSync)
             {
-            
+                awaitingSend.Enqueue(send);
                 // Lock?
 
                 pendingBytes = encoding.GetBytes(s);
@@ -177,12 +177,14 @@ namespace CustomNetworking
 
             try
             {
-                int bytesSent = socket.EndSend(result);
+                
 
 
                 // Get exclusive access to send mechanism
                 lock (sendSync)
                 {
+                    int bytesSent = socket.EndSend(result);
+
                     if (bytesSent == pendingBytes.Length)
                     {
                         SendObject send = awaitingSend.Dequeue();

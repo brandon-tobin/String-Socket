@@ -1,0 +1,5 @@
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocket\bin\Debug\StringSocket.dll
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocket\bin\Debug\StringSocket.pdb
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocket\obj\Debug\StringSocket.dll
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocket\obj\Debug\StringSocket.pdb
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocket\obj\Debug\StringSocket.csprojResolveAssemblyReference.cache

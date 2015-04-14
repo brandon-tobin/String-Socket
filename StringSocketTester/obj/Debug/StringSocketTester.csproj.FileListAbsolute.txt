@@ -1,0 +1,7 @@
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocketTester\bin\Debug\StringSocketTester.dll
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocketTester\bin\Debug\StringSocketTester.pdb
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocketTester\bin\Debug\StringSocket.dll
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocketTester\bin\Debug\StringSocket.pdb
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocketTester\obj\Debug\StringSocketTester.csprojResolveAssemblyReference.cache
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocketTester\obj\Debug\StringSocketTester.dll
+C:\Users\Tobin\Source\Repos\PS10Restart\StringSocketTester\obj\Debug\StringSocketTester.pdb
